@@ -1,0 +1,31 @@
+from flask import Blueprint, request, jsonify
+from core.embeddings import extract_embedding
+from core.feature_extraction import extract_behavior_features
+from db.crud import save_user_profile
+
+user_bp = Blueprint("user", __name__)
+
+@user_bp.route("/enroll", methods=["POST"])
+def enroll_user():
+    user_id = request.form.get("user_id")
+    files = request.files.getlist("files")
+
+    embeddings = []
+    behavior_data = []
+
+    for file in files:
+        audio_bytes = file.read()
+        emb = extract_embedding(audio_bytes)
+        feat = extract_behavior_features(audio_bytes)
+        embeddings.append(emb)
+        behavior_data.append(feat)
+
+    avg_embedding = [sum(x)/len(x) for x in zip(*embeddings)]
+    avg_behavior = {
+        "pitch_avg": sum([d["pitch"] for d in behavior_data]) / len(behavior_data),
+        "tempo_avg": sum([d["tempo"] for d in behavior_data]) / len(behavior_data),
+        "mfcc_avg": [sum(x)/len(x) for x in zip(*[d["mfcc"] for d in behavior_data])]
+    }
+
+    save_user_profile(user_id, avg_embedding, avg_behavior)
+    return jsonify({"status": "User enrolled", "user_id": user_id})
