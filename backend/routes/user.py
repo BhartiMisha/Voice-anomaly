@@ -10,6 +10,9 @@ def enroll_user():
     user_id = request.form.get("user_id")
     files = request.files.getlist("files")
 
+    if not user_id or not files:
+        return jsonify({"error": "user_id and at least one audio file are required"}), 400
+
     embeddings = []
     behavior_data = []
 
@@ -17,13 +20,19 @@ def enroll_user():
         audio_bytes = file.read()
         emb = extract_embedding(audio_bytes)
         feat = extract_behavior_features(audio_bytes)
-        embeddings.append(emb)
-        behavior_data.append(feat)
 
+        if emb and feat["mfcc"]:  # ensure features were extracted
+            embeddings.append(emb)
+            behavior_data.append(feat)
+
+    if not embeddings or not behavior_data:
+        return jsonify({"error": "No valid audio data processed"}), 400
+
+    # Compute averages safely
     avg_embedding = [sum(x)/len(x) for x in zip(*embeddings)]
     avg_behavior = {
-        "pitch_avg": sum([d["pitch"] for d in behavior_data]) / len(behavior_data),
-        "tempo_avg": sum([d["tempo"] for d in behavior_data]) / len(behavior_data),
+        "pitch_avg": sum(d["pitch"] for d in behavior_data) / len(behavior_data),
+        "tempo_avg": sum(d["tempo"] for d in behavior_data) / len(behavior_data),
         "mfcc_avg": [sum(x)/len(x) for x in zip(*[d["mfcc"] for d in behavior_data])]
     }
 
