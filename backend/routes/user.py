@@ -18,12 +18,26 @@ def enroll_user():
 
     for file in files:
         audio_bytes = file.read()
+        print(f"Processing file: {file.filename}, size: {len(audio_bytes)} bytes")
+
         emb = extract_embedding(audio_bytes)
+        print(f"Embedding length: {len(emb)}")
+
         feat = extract_behavior_features(audio_bytes)
+        print(f"Behavior features: {feat}")
 
         if emb and feat["mfcc"]:  # ensure features were extracted
             embeddings.append(emb)
             behavior_data.append(feat)
+
+    # for file in files:
+    #     audio_bytes = file.read()
+    #     emb = extract_embedding(audio_bytes)
+    #     feat = extract_behavior_features(audio_bytes)
+
+    #     if emb and feat["mfcc"]:  # ensure features were extracted
+    #         embeddings.append(emb)
+    #         behavior_data.append(feat)
 
     if not embeddings or not behavior_data:
         return jsonify({"error": "No valid audio data processed"}), 400
