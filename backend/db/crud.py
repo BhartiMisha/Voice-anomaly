@@ -1,5 +1,7 @@
 from .mongo_client import users_collection, alerts_collection
 from datetime import datetime
+from bson import ObjectId
+from db.mongo_client import db 
 
 def save_user_profile(user_id, embedding, behavior):
     profile = {
@@ -26,5 +28,5 @@ def get_recent_alerts(limit=10):
     return list(alerts_collection.find().sort("timestamp", -1).limit(limit))
 
 def mark_alert_valid(alert_id):
-    result = alerts_collection.update_one({"_id": alert_id}, {"$set": {"status": "VALID"}})
+    result = db.alerts.update_one({"_id": ObjectId(alert_id)}, {"$set": {"status": "VALID"}})
     return result.modified_count > 0
