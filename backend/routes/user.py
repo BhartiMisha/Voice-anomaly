@@ -43,3 +43,8 @@ def enroll_user():
 
     save_user_profile(user_id, avg_embedding, avg_behavior)
     return jsonify({"status": "User enrolled", "user_id": user_id})
+
+@user_bp.route("/all_users", methods=["GET"])
+def get_all_users():
+    # return the list of users
+    pass
