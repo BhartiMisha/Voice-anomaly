@@ -47,4 +47,6 @@ def enroll_user():
 @user_bp.route("/all_users", methods=["GET"])
 def get_all_users():
     # return the list of users
-    pass
+    from db.crud import get_all_users as crud_get_all_users
+    users = crud_get_all_users()
+    return jsonify(users)

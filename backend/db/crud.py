@@ -30,3 +30,7 @@ def get_recent_alerts(limit=10):
 def mark_alert_valid(alert_id):
     result = db.alerts.update_one({"_id": ObjectId(alert_id)}, {"$set": {"status": "VALID"}})
     return result.modified_count > 0
+
+def get_all_users():
+    # get list of all users from the collection
+    return list(users_collection.find({}, {"_id": 0}))
