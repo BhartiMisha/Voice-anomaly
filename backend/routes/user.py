@@ -7,28 +7,61 @@ user_bp = Blueprint("user", __name__)
 
 @user_bp.route("/enroll", methods=["POST"])
 def enroll_user():
-    user_id = request.form.get("user_id")
-    files = request.files.getlist("files")
+    # Check if data is JSON (file paths) or form data (file uploads)
+    if request.is_json:
+        data = request.get_json()
+        user_id = data.get("user_id")
+        audio_paths = data.get("audio_paths", [])
+        
+        if not user_id or not audio_paths:
+            return jsonify({"error": "user_id and audio_paths are required"}), 400
+        
+        # Process files from paths
+        embeddings = []
+        behavior_data = []
+        
+        for path in audio_paths:
+            try:
+                with open(path, "rb") as f:
+                    audio_bytes = f.read()
+                print(f"Processing file: {path}, size: {len(audio_bytes)} bytes")
+                
+                emb = extract_embedding(audio_bytes)
+                print(f"Embedding length: {len(emb)}")
+                
+                feat = extract_behavior_features(audio_bytes)
+                print(f"Behavior features: {feat}")
+                
+                if emb and feat["mfcc"]:  # ensure features were extracted
+                    embeddings.append(emb)
+                    behavior_data.append(feat)
+            except Exception as e:
+                print(f"Error processing file {path}: {e}")
+                continue
+    else:
+        # Original form data handling
+        user_id = request.form.get("user_id")
+        files = request.files.getlist("files")
 
-    if not user_id or not files:
-        return jsonify({"error": "user_id and at least one audio file are required"}), 400
+        if not user_id or not files:
+            return jsonify({"error": "user_id and at least one audio file are required"}), 400
 
-    embeddings = []
-    behavior_data = []
+        embeddings = []
+        behavior_data = []
 
-    for file in files:
-        audio_bytes = file.read()
-        print(f"Processing file: {file.filename}, size: {len(audio_bytes)} bytes")
+        for file in files:
+            audio_bytes = file.read()
+            print(f"Processing file: {file.filename}, size: {len(audio_bytes)} bytes")
 
-        emb = extract_embedding(audio_bytes)
-        print(f"Embedding length: {len(emb)}")
+            emb = extract_embedding(audio_bytes)
+            print(f"Embedding length: {len(emb)}")
 
-        feat = extract_behavior_features(audio_bytes)
-        print(f"Behavior features: {feat}")
+            feat = extract_behavior_features(audio_bytes)
+            print(f"Behavior features: {feat}")
 
-        if emb and feat["mfcc"]:  # ensure features were extracted
-            embeddings.append(emb)
-            behavior_data.append(feat)
+            if emb and feat["mfcc"]:  # ensure features were extracted
+                embeddings.append(emb)
+                behavior_data.append(feat)
 
     if not embeddings or not behavior_data:
         return jsonify({"error": "No valid audio data processed"}), 400

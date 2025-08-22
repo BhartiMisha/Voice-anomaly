@@ -18,3 +18,4 @@ torchaudio==2.0.2
 
 # Misc
 joblib==1.3.2
+requests==2.5.0

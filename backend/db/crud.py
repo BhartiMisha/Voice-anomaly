@@ -34,3 +34,7 @@ def mark_alert_valid(alert_id):
 def get_all_users():
     # get list of all users from the collection
     return list(users_collection.find({}, {"_id": 0}))
+
+def get_all_user_profiles():
+    # get all user profiles with embeddings and behavior data
+    return list(users_collection.find({}, {"_id": 0}))
